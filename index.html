@@ -17,12 +17,28 @@
     .tab-inactive { border-bottom: 2px solid transparent; color: #64748b; }
     .tab-inactive:hover { color: #1e293b; border-color: #cbd5e1; }
     
-    /* Ngày đã có báo cáo trên lịch */
     .has-report {
       background-color: #dbeafe !important;
       color: #1d4ed8 !important;
       font-weight: 700 !important;
       border: 1px solid #93c5fd !important;
+    }
+
+    /* THANH CUỘN NGANG HIỆN ĐẠI, DỄ DÀNG KÉO RÊ TRÊN EDGE / CHROME */
+    .table-scrollbar-container::-webkit-scrollbar {
+      height: 12px;
+    }
+    .table-scrollbar-container::-webkit-scrollbar-track {
+      background: #e2e8f0;
+      border-radius: 6px;
+    }
+    .table-scrollbar-container::-webkit-scrollbar-thumb {
+      background: #64748b;
+      border-radius: 6px;
+      border: 2px solid #e2e8f0;
+    }
+    .table-scrollbar-container::-webkit-scrollbar-thumb:hover {
+      background: #334155;
     }
   </style>
 </head>
@@ -76,7 +92,6 @@
       <!-- THANH CÔNG CỤ: CHỌN NGÀY - TRỰC BAN - BÁO CÁO GỐC -->
       <div class="bg-white p-4 rounded-xl border border-slate-300 shadow-sm flex flex-wrap items-center justify-between gap-4">
         
-        <!-- Cụm chọn lịch mở (Mọi ngày) -->
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-lg shadow-sm">
             <i class="fa-regular fa-calendar-days"></i>
@@ -90,15 +105,12 @@
           </div>
         </div>
 
-        <!-- Cụm Trực ban & Báo cáo gốc -->
         <div class="flex items-center flex-wrap gap-3">
-          <!-- Tên Trực ban được đưa lên đây -->
           <div id="officer-badge-container" class="flex items-center gap-2 bg-blue-50 text-blue-900 px-3.5 py-2 rounded-xl border border-blue-200 shadow-sm text-xs font-medium">
             <i class="fa-solid fa-user-tie text-blue-600 text-sm"></i>
             <span>Trực ban: <strong id="officer-name" class="font-bold text-blue-950">Chưa rõ</strong></span>
           </div>
 
-          <!-- Nút Báo cáo gốc -->
           <div id="doc-actions-container" class="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-xl border border-slate-300 shadow-sm">
             <span class="text-xs font-semibold text-slate-700 mr-1 flex items-center gap-1.5">
               <i class="fa-solid fa-file-word text-blue-600 text-sm"></i>
@@ -149,34 +161,35 @@
         </div>
       </div>
 
-      <!-- Bảng tình hình các tàu (Thiết kế ranh giới phân cách rõ nét) -->
+      <!-- Bảng tình hình các tàu (KÈM THANH CUỘN NGANG DỄ KÉO) -->
       <div class="bg-white rounded-xl border-2 border-slate-300 shadow-md overflow-hidden">
         <div class="px-5 py-4 border-b-2 border-slate-200 flex items-center justify-between bg-slate-50">
           <div class="flex items-center gap-2">
             <span class="w-3 h-3 rounded-full bg-blue-600"></span>
             <h2 id="table-heading" class="text-base font-bold text-slate-800">Tình hình các tàu</h2>
           </div>
-          <span id="loading-badge" class="text-xs text-blue-600 font-medium hidden">
-            <i class="fa-solid fa-circle-notch fa-spin"></i> Đang tải dữ liệu...
+          <span class="text-xs text-slate-500 flex items-center gap-1">
+            <i class="fa-solid fa-arrows-left-right text-slate-400"></i> Kéo thanh trượt bên dưới để xem thêm cột
           </span>
         </div>
 
-        <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse text-sm">
+        <!-- Vùng cuộn ngang với Scrollbar đậm, rõ nét -->
+        <div class="overflow-x-auto table-scrollbar-container pb-2">
+          <table class="w-full text-left border-collapse text-sm min-w-[1250px]">
             <thead class="bg-slate-200 text-slate-800 font-bold border-b-2 border-slate-400 text-xs uppercase tracking-wider">
               <tr>
-                <th class="py-4 px-3 text-center w-14 border-r border-slate-300">TT</th>
-                <th class="py-4 px-4 min-w-[150px] border-r border-slate-300">Tên Tàu</th>
-                <th class="py-4 px-3 min-w-[110px] border-r border-slate-300">Chuyến / HĐ</th>
-                <th class="py-4 px-3 min-w-[130px] border-r border-slate-300">Trạng thái</th>
+                <th class="py-4 px-2 text-center w-12 border-r border-slate-300">TT</th>
+                <th class="py-4 px-4 min-w-[170px] text-center border-r border-slate-300">Tên Tàu</th>
+                <th class="py-4 px-3 min-w-[110px] text-center border-r border-slate-300">Chuyến / HĐ</th>
+                <th class="py-4 px-3 min-w-[130px] text-center border-r border-slate-300">Trạng thái</th>
                 <th class="py-4 px-3 min-w-[140px] border-r border-slate-300">Vị trí / Cảng</th>
                 <th class="py-4 px-4 min-w-[160px] border-r border-slate-300">Hàng hóa & Còn lại</th>
-                <th class="py-4 px-4 min-w-[150px] border-r border-slate-300">Lịch trình (ETA/ETD)</th>
-                <th class="py-4 px-4 min-w-[300px] border-r border-slate-300">Diễn biến khai thác & Đề xuất</th>
-                <th class="py-4 px-4 min-w-[210px]">Ý kiến chỉ đạo / Ghi chú</th>
+                <th class="py-4 px-4 min-w-[160px] border-r border-slate-300">Lịch trình (ETA/ETD)</th>
+                <th class="py-4 px-4 min-w-[320px] border-r border-slate-300">Diễn biến khai thác & Đề xuất</th>
+                <th class="py-4 px-4 min-w-[220px]">Ý kiến chỉ đạo / Ghi chú</th>
               </tr>
             </thead>
-            <tbody id="fleet-table-body" class="text-slate-800 divide-y-2 divide-slate-300">
+            <tbody id="fleet-table-body" class="text-slate-800">
               <tr>
                 <td colspan="9" class="py-12 text-center text-slate-400">Đang nạp dữ liệu từ hệ thống...</td>
               </tr>
@@ -197,11 +210,6 @@
           <p class="text-sm text-slate-500 max-w-lg mx-auto mt-1">
             Theo dõi tiến độ chuyến đi, số chuyến (Voyage No), tính toán thưởng phạt làm hàng (Laytime / Demurrage) và chi phí nhiên liệu.
           </p>
-        </div>
-        <div class="pt-2">
-          <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-            <i class="fa-solid fa-clock"></i> Sẵn sàng kết nối khi triển khai bước tiếp theo
-          </span>
         </div>
       </div>
     </div>
@@ -267,7 +275,6 @@
     }
 
     function loadData() {
-      document.getElementById('loading-badge').classList.remove('hidden');
       fetch(API_URL)
         .then(response => {
           if (!response.ok) throw new Error("HTTP error " + response.status);
@@ -276,12 +283,10 @@
         .then(data => onDataLoaded(data))
         .catch(err => {
           alert('Không thể tải dữ liệu: ' + err.message);
-          document.getElementById('loading-badge').classList.add('hidden');
         });
     }
 
     function onDataLoaded(data) {
-      document.getElementById('loading-badge').classList.add('hidden');
       allFleetData = data || [];
 
       availableDates = [...new Set(allFleetData.map(item => item.report_date).filter(Boolean))];
@@ -332,7 +337,6 @@
       
       let filtered = allFleetData.filter(item => item.report_date === selectedDate);
       
-      // Cập nhật Tên Trực Ban & Link báo cáo gốc
       if (filtered.length > 0) {
         const officer = filtered[0].standing_officer || 'Chưa cập nhật';
         document.getElementById('officer-name').innerText = officer;
@@ -349,7 +353,6 @@
         document.getElementById('doc-actions-container').classList.add('opacity-40', 'pointer-events-none');
       }
 
-      // Kế thừa thứ tự đã lưu của người dùng
       filtered = applySavedOrder(filtered);
       currentFilteredData = filtered;
 
@@ -395,42 +398,44 @@
       }
     }
 
-    // Lọc bỏ phần chữ in nghiêng / ghi chú bên dưới của phần diễn biến
-    function cleanRemarksText(rawRemarks) {
-      if (!rawRemarks) return '';
-      // Tách theo dòng hoặc phát hiện các cụm từ bắt đầu phần ghi chú phụ bên dưới
-      const lines = rawRemarks.split(/\r?\n/);
+    // Chắt lọc Diễn biến: Bỏ ngày bàn giao cũ, bỏ lặp ETB, bỏ lặp số lượng hàng còn lại
+    function cleanConciseRemarks(rawRemarks) {
+      if (!rawRemarks) return 'Bình thường, không có diễn biến đặc biệt.';
+      
+      let text = rawRemarks;
+      // Bỏ ngày bàn giao
+      text = text.replace(/bàn giao.*?\d{1,2}[\/\-]\d{1,2}[\/\-]?\d{0,4}/gi, '');
+      text = text.replace(/nhận tàu.*?\d{1,2}[\/\-]\d{1,2}[\/\-]?\d{0,4}/gi, '');
+      
+      // Cắt bỏ phần ghi chú in nghiêng dưới
+      const lines = text.split(/\r?\n/);
       const cleanLines = [];
-
       for (let line of lines) {
-        const trimL = line.trim().toLowerCase();
-        // Cắt bỏ khi chạm tới các phần chú thích thường in nghiêng ở dưới
-        if (trimL.startsWith('ghi chú:') || trimL.startsWith('lưu ý:') || trimL.startsWith('*') || trimL.startsWith('note:') || trimL.startsWith('dự kiến dỡ')) {
+        const t = line.trim().toLowerCase();
+        if (t.startsWith('ghi chú:') || t.startsWith('lưu ý:') || t.startsWith('*') || t.startsWith('note:') || t.startsWith('dự kiến dỡ')) {
           break;
         }
         cleanLines.push(line);
       }
-      return cleanLines.join('\n').trim();
+      return cleanLines.join(' ').replace(/\s+/g, ' ').trim();
     }
 
-    // Đề xuất mặc định
     function getDefaultProposal(item) {
       const st = (item.status || '').toUpperCase();
       const remText = item.remaining_cargo ? String(item.remaining_cargo) : '0';
       
       if (st.includes('LOAD')) {
-        return `Đang xếp (Còn ${remText} MT): Theo dõi tốc độ làm hàng; đôn đốc đại lý chuẩn bị sẵn chứng từ hàng hóa để làm thủ tục rời cảng ngay khi đóng nắp hầm.`;
+        return `Đang xếp (Còn ${remText} MT): Theo dõi tốc độ làm hàng; đôn đốc đại lý làm thủ tục rời cảng ngay khi xong hàng.`;
       } else if (st.includes('DISCH')) {
-        return `Đang dỡ (Còn ${remText} MT): Bố trí thêm phương tiện giải phóng bến bãi; liên hệ đại lý đôn đốc dỡ vét hầm và hoàn tất thanh toán trước khi dỡ xong.`;
+        return `Đang dỡ (Còn ${remText} MT): Bố trí thêm phương tiện giải phóng bến bãi; đôn đốc dỡ vét hầm và hoàn tất thanh toán trước khi dỡ xong.`;
       } else if (st.includes('ANCHOR') || st.includes('WAIT')) {
-        return `Đang neo chờ: Hối thúc đại lý cập nhật thứ tự cập cầu (berthing line-up); kiểm tra tiến độ giải phóng tàu trước để xin cập sớm.`;
+        return `Đang neo chờ: Hối thúc đại lý cập nhật thứ tự cập cầu; kiểm tra tiến độ tàu trước để xin cập sớm.`;
       } else if (st.includes('SEA')) {
-        return `Đang hành trình: Duy trì tốc độ máy tối ưu thời tiết; điện báo trước ETA cho đại lý cảng đến để đăng ký cầu bến kịp thời.`;
+        return `Đang hành trình: Duy trì tốc độ máy tối ưu thời tiết; điện báo ETA cho đại lý cảng đến để đăng ký cầu kịp thời.`;
       }
       return 'Theo dõi sát tiến độ khai thác và chỉ đạo đại lý hỗ trợ giải phóng tàu nhanh.';
     }
 
-    // Quản lý Lưu / Đọc dữ liệu chỉnh sửa của User
     function getStoredData(storageKey, vesselName, reportDate, defaultVal) {
       const store = JSON.parse(localStorage.getItem(storageKey) || "{}");
       const key = `${vesselName}_${reportDate}`;
@@ -459,7 +464,6 @@
                   <i class="fa-regular fa-folder-open"></i>
                 </div>
                 <span class="text-base font-semibold text-slate-700">Chưa có thông tin báo cáo cho ngày ${dateDisplay}</span>
-                <p class="text-xs text-slate-400 mt-1">Vui lòng chọn ngày có chấm xanh trên lịch hoặc cập nhật email báo cáo mới.</p>
               </div>
             </td>
           </tr>
@@ -482,26 +486,22 @@
         const isFirst = index === 0;
         const isLast = index === data.length - 1;
 
-        // Xử lý lấy chữ bình thường của diễn biến, cho phép chỉnh sửa và đọc từ LocalStorage
-        const defaultCleanRemarks = cleanRemarksText(item.remarks) || 'Bình thường, không có ghi nhận đặc biệt.';
+        const defaultCleanRemarks = cleanConciseRemarks(item.remarks);
         const currentRemarks = getStoredData(STORAGE_KEY_REMARKS, item.vessel_name, item.report_date, defaultCleanRemarks);
 
-        // Đề xuất (bỏ chữ quay vòng), cho phép chỉnh sửa
         const defaultProposal = getDefaultProposal(item);
         const currentProposal = getStoredData(STORAGE_KEY_PROPOSALS, item.vessel_name, item.report_date, defaultProposal);
-
-        // Ý kiến chỉ đạo của User
         const userNote = getStoredData(STORAGE_KEY_NOTES, item.vessel_name, item.report_date, '');
 
-        // Nền xen kẽ nhẹ giữa các tàu để dễ phân biệt
-        const rowBg = index % 2 === 0 ? 'bg-white' : 'bg-slate-50/70';
+        // VIỀN PHÂN CÁCH GIỮA CÁC TÀU RÕ NÉT (border-b-4)
+        const rowBg = index % 2 === 0 ? 'bg-white' : 'bg-slate-50/80';
 
         const row = `
-          <tr class="${rowBg} hover:bg-blue-50/40 transition align-top">
+          <tr class="${rowBg} hover:bg-blue-50/50 transition align-top border-b-4 border-slate-300">
             <!-- Nút chỉnh thứ tự -->
             <td class="py-4 px-2 text-center whitespace-nowrap border-r border-slate-300">
-              <div class="inline-flex flex-col gap-1 items-center">
-                <span class="text-[11px] font-bold text-slate-400 mb-0.5">${index + 1}</span>
+              <div class="inline-flex flex-col gap-1 items-center justify-center">
+                <span class="text-[11px] font-bold text-slate-400">${index + 1}</span>
                 <button onclick="moveShip(${index}, -1)" ${isFirst ? 'disabled class="text-slate-300 cursor-not-allowed"' : 'class="text-slate-600 hover:text-blue-600 hover:bg-slate-200 rounded p-0.5"'} title="Chuyển lên trên">
                   <i class="fa-solid fa-chevron-up text-xs"></i>
                 </button>
@@ -511,17 +511,17 @@
               </div>
             </td>
 
-            <!-- Tên Tàu (ĐÃ BỎ TRỰC BAN PHÍA DƯỚI) -->
-            <td class="py-4 px-4 border-r border-slate-300">
+            <!-- Tên Tàu (CĂN GIỮA Ô) -->
+            <td class="py-4 px-4 text-center border-r border-slate-300">
               <div class="font-bold text-blue-900 text-sm tracking-tight">${item.vessel_name}</div>
               <div class="text-[11px] text-slate-400 mt-1">${formatDateVN(item.report_date)}</div>
             </td>
 
-            <!-- Chuyến / HĐ -->
-            <td class="py-4 px-3 text-xs font-bold text-slate-700 border-r border-slate-300">${item.voyage_no || '-'}</td>
+            <!-- Chuyến / HĐ (Căn giữa) -->
+            <td class="py-4 px-3 text-center text-xs font-bold text-slate-700 border-r border-slate-300">${item.voyage_no || '-'}</td>
 
-            <!-- Trạng thái -->
-            <td class="py-4 px-3 border-r border-slate-300">
+            <!-- Trạng thái (Căn giữa) -->
+            <td class="py-4 px-3 text-center border-r border-slate-300">
               <span class="px-2.5 py-1 text-xs font-bold rounded-md inline-block ${getStatusBadge(st)}">
                 ${item.status}
               </span>
@@ -532,17 +532,16 @@
 
             <!-- Hàng hóa & Còn lại -->
             <td class="py-4 px-4 border-r border-slate-300">
-              <div class="font-medium text-slate-900 text-xs leading-snug">${item.cargo_info}</div>
-              <div class="text-xs text-amber-600 font-bold mt-1.5">Còn: ${item.remaining_cargo} MT</div>
+              <div class="font-medium text-slate-900 text-xs">${item.cargo_info}</div>
+              <div class="text-xs text-amber-600 font-bold mt-1.5">Còn lại: ${item.remaining_cargo} MT</div>
               ${item.discharging_port ? `<div class="text-[11px] text-slate-500 mt-1">Cảng dỡ: ${item.discharging_port}</div>` : ''}
             </td>
 
             <!-- Lịch trình (ETA/ETD) -->
             <td class="py-4 px-4 text-xs text-slate-700 font-medium whitespace-pre-line leading-relaxed border-r border-slate-300">${item.eta_etd}</td>
 
-            <!-- Diễn biến khai thác (Chữ thường, có thể sửa) & Đề xuất (Có thể sửa) -->
+            <!-- Diễn biến khai thác (Súc tích, có thể sửa) & Đề xuất (Có thể sửa) -->
             <td class="py-4 px-4 text-xs space-y-2.5 border-r border-slate-300">
-              <!-- Ô chỉnh sửa Diễn biến khai thác -->
               <div>
                 <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
                   <i class="fa-solid fa-pen text-slate-400"></i> Diễn biến khai thác:
@@ -554,7 +553,6 @@
                 >${currentRemarks}</textarea>
               </div>
 
-              <!-- Ô chỉnh sửa Đề xuất (Bỏ chữ quay vòng) -->
               <div>
                 <label class="block text-[10px] font-bold uppercase tracking-wider text-blue-700 mb-1 flex items-center gap-1">
                   <i class="fa-solid fa-lightbulb text-amber-500"></i> Đề xuất:
