@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Quản lý đội tàu Vinaship</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    .tab-active { border-bottom: 2px solid #2563eb; color: #1d4ed8; font-weight: 600; }
+    .tab-inactive { border-bottom: 2px solid transparent; color: #64748b; }
+    .tab-inactive:hover { color: #1e293b; border-color: #cbd5e1; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen">
+
+  <!-- Header -->
+  <header class="bg-slate-900 text-white sticky top-0 z-40 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center text-white text-xl shadow">
+            <i class="fa-solid fa-ship"></i>
+          </div>
+          <div>
+            <span class="text-xs uppercase tracking-wider text-blue-400 font-semibold block">Hệ thống Điều hành & Khai thác</span>
+            <h1 class="text-lg md:text-xl font-bold tracking-tight">Quản lý đội tàu Vinaship</h1>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-3">
+          <button onclick="loadData()" class="inline-flex items-center gap-2 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs md:text-sm font-medium rounded-lg shadow transition">
+            <i class="fa-solid fa-rotate"></i> <span>Làm mới</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="bg-white border-b border-slate-200 shadow-sm">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex gap-8">
+        <button id="tab-btn-daily" onclick="switchModule('daily')" class="py-3 px-1 text-sm inline-flex items-center gap-2 tab-active transition">
+          <i class="fa-solid fa-calendar-day"></i> Tình hình tàu hàng ngày
+        </button>
+        <button id="tab-btn-voyage" onclick="switchModule('voyage')" class="py-3 px-1 text-sm inline-flex items-center gap-2 tab-inactive transition">
+          <i class="fa-solid fa-route"></i> Quản lý chuyến đi
+          <span class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded border border-slate-200">Sắp ra mắt</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- MODULE 1: TÌNH HÌNH TÀU HÀNG NGÀY -->
+    <div id="module-daily" class="space-y-6">
+      
+      <!-- THANH CHỌN NGÀY BÁO CÁO -->
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+            <i class="fa-regular fa-calendar-check text-lg"></i>
+          </div>
+          <div>
+            <label for="date-select" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Ngày báo cáo</label>
+            <select id="date-select" onchange="onDateChanged()" class="mt-0.5 bg-slate-50 border border-slate-300 text-slate-900 text-sm font-bold rounded-lg focus:ring-blue-500 focus:border-blue-500 block px-3 py-1.5 cursor-pointer">
+              <option value="">Đang tải các ngày...</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="text-xs text-slate-500 flex items-center gap-1.5 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200">
+          <i class="fa-solid fa-circle-info text-blue-500"></i>
+          <span>Hiển thị theo báo cáo chốt trực ban ngày đã chọn.</span>
+        </div>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Số tàu báo cáo</span>
+            <div id="kpi-total" class="text-2xl font-bold text-slate-800 mt-0.5">0</div>
+          </div>
+          <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-lg"><i class="fa-solid fa-ship"></i></div>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <span class="text-xs font-semibold text-emerald-600 uppercase tracking-wide">Hành trình (Sea)</span>
+            <div id="kpi-sea" class="text-2xl font-bold text-emerald-600 mt-0.5">0</div>
+          </div>
+          <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg"><i class="fa-solid fa-water"></i></div>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <span class="text-xs font-semibold text-amber-600 uppercase tracking-wide">Làm hàng (Port)</span>
+            <div id="kpi-port" class="text-2xl font-bold text-amber-600 mt-0.5">0</div>
+          </div>
+          <div class="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-lg"><i class="fa-solid fa-boxes-stacked"></i></div>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Neo / Chờ / Khác</span>
+            <div id="kpi-other" class="text-2xl font-bold text-slate-700 mt-0.5">0</div>
+          </div>
+          <div class="w-10 h-10 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-lg"><i class="fa-solid fa-anchor"></i></div>
+        </div>
+      </div>
+
+      <!-- Bảng tình hình các tàu -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+            <h2 id="table-heading" class="text-base font-bold text-slate-800">Tình hình các tàu</h2>
+          </div>
+          <span id="loading-badge" class="text-xs text-blue-600 font-medium hidden">
+            <i class="fa-solid fa-circle-notch fa-spin"></i> Đang tải dữ liệu...
+          </span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-sm">
+            <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 text-xs uppercase tracking-wider">
+              <tr>
+                <th class="py-3.5 px-4">Tên Tàu</th>
+                <th class="py-3.5 px-4">Chuyến / HĐ</th>
+                <th class="py-3.5 px-4">Trạng thái</th>
+                <th class="py-3.5 px-4">Vị trí / Cảng</th>
+                <th class="py-3.5 px-4">Hàng hóa & Còn lại</th>
+                <th class="py-3.5 px-4">Lịch trình (ETA/ETB/ETD)</th>
+                <th class="py-3.5 px-4">Cảng dỡ</th>
+                <th class="py-3.5 px-4">Diễn biến khai thác</th>
+                <th class="py-3.5 px-4 text-center">Tài liệu gốc</th>
+              </tr>
+            </thead>
+            <tbody id="fleet-table-body" class="divide-y divide-slate-100 text-slate-700">
+              <tr>
+                <td colspan="9" class="py-8 text-center text-slate-400">Đang nạp dữ liệu từ hệ thống...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODULE 2: QUẢN LÝ CHUYẾN ĐI -->
+    <div id="module-voyage" class="hidden">
+      <div class="bg-white rounded-xl border border-dashed border-slate-300 p-12 text-center space-y-4 shadow-sm">
+        <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto text-2xl">
+          <i class="fa-solid fa-route"></i>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-slate-800">Phân hệ Quản lý chuyến đi (Voyage Management)</h3>
+          <p class="text-sm text-slate-500 max-w-lg mx-auto mt-1">
+            Theo dõi tiến độ chuyến đi, số chuyến (Voyage No), tính toán thưởng phạt làm hàng (Laytime / Demurrage) và chi phí nhiên liệu.
+          </p>
+        </div>
+        <div class="pt-2">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+            <i class="fa-solid fa-clock"></i> Sẵn sàng kết nối khi triển khai bước tiếp theo
+          </span>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Modal xem file Word trực tiếp -->
+  <div id="previewModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center hidden p-3 md:p-6">
+    <div class="bg-white w-full max-w-5xl h-[88vh] rounded-2xl flex flex-col overflow-hidden shadow-2xl">
+      <div class="flex items-center justify-between px-5 py-3.5 border-b bg-slate-50">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-file-word text-blue-600 text-lg"></i>
+          <h3 id="modalTitle" class="font-bold text-slate-800 text-sm md:text-base">Xem file báo cáo</h3>
+        </div>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-slate-700 text-xl font-bold px-2 py-1 transition">&times;</button>
+      </div>
+      <div class="flex-1 bg-slate-100 relative">
+        <iframe id="fileViewerFrame" class="w-full h-full border-0" src=""></iframe>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // THAY ĐƯỜNG LINK WEB APP CỦA BẠN VÀO ĐÂY:
+    const API_URL = "https://script.google.com/macros/s/AKfycbx0y-5asV3mH0ZrfDfmme7gWkzjBHg8HJaP6_lrofsQ-gaHSS-32bvEZNq2q2_eCCWa/exec";
+
+    let allFleetData = [];
+
+    function switchModule(mod) {
+      const dailyMod = document.getElementById('module-daily');
+      const voyageMod = document.getElementById('module-voyage');
+      const btnDaily = document.getElementById('tab-btn-daily');
+      const btnVoyage = document.getElementById('tab-btn-voyage');
+
+      if (mod === 'daily') {
+        dailyMod.classList.remove('hidden');
+        voyageMod.classList.add('hidden');
+        btnDaily.className = 'py-3 px-1 text-sm inline-flex items-center gap-2 tab-active transition';
+        btnVoyage.className = 'py-3 px-1 text-sm inline-flex items-center gap-2 tab-inactive transition';
+      } else {
+        dailyMod.classList.add('hidden');
+        voyageMod.classList.remove('hidden');
+        btnDaily.className = 'py-3 px-1 text-sm inline-flex items-center gap-2 tab-inactive transition';
+        btnVoyage.className = 'py-3 px-1 text-sm inline-flex items-center gap-2 tab-active transition';
+      }
+    }
+
+    // Tải dữ liệu qua giao thức fetch trực tiếp từ Microsoft Edge
+    function loadData() {
+      document.getElementById('loading-badge').classList.remove('hidden');
+      fetch(API_URL)
+        .then(response => {
+          if (!response.ok) throw new Error("HTTP error " + response.status);
+          return response.json();
+        })
+        .then(data => onDataLoaded(data))
+        .catch(err => {
+          alert('Không thể tải dữ liệu: ' + err.message + '\nKiểm tra lại quyền Anyone khi Deploy.');
+          document.getElementById('loading-badge').classList.add('hidden');
+        });
+    }
+
+    function onDataLoaded(data) {
+      document.getElementById('loading-badge').classList.add('hidden');
+      allFleetData = data || [];
+
+      const dates = [...new Set(allFleetData.map(item => item.report_date).filter(Boolean))];
+      dates.sort((a, b) => b.localeCompare(a));
+
+      const select = document.getElementById('date-select');
+      select.innerHTML = '';
+
+      if (dates.length === 0) {
+        select.innerHTML = '<option value="">Không có dữ liệu</option>';
+        renderFilteredData([]);
+        return;
+      }
+
+      dates.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d;
+        opt.textContent = 'Ngày ' + d;
+        select.appendChild(opt);
+      });
+
+      select.value = dates[0];
+      onDateChanged();
+    }
+
+    function onDateChanged() {
+      const selectedDate = document.getElementById('date-select').value;
+      document.getElementById('table-heading').innerText = 'Tình hình các tàu (' + selectedDate + ')';
+      
+      const filtered = allFleetData.filter(item => item.report_date === selectedDate);
+      renderFilteredData(filtered);
+    }
+
+    function renderFilteredData(data) {
+      const tbody = document.getElementById('fleet-table-body');
+      tbody.innerHTML = '';
+      
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="py-8 text-center text-slate-400">Không có dữ liệu báo cáo cho ngày này.</td></tr>';
+        document.getElementById('kpi-total').innerText = 0;
+        document.getElementById('kpi-sea').innerText = 0;
+        document.getElementById('kpi-port').innerText = 0;
+        document.getElementById('kpi-other').innerText = 0;
+        return;
+      }
+
+      let sea = 0, port = 0, other = 0;
+
+      data.forEach(item => {
+        const st = (item.status || '').toUpperCase();
+        if (st.includes('SEA')) sea++;
+        else if (st.includes('LOAD') || st.includes('DISCH')) port++;
+        else other++;
+
+        const row = `
+          <tr class="hover:bg-slate-50/90 transition">
+            <td class="py-3.5 px-4">
+              <div class="font-bold text-slate-900">${item.vessel_name}</div>
+              <div class="text-xs text-slate-400 mt-0.5">${item.report_date}</div>
+            </td>
+            <td class="py-3.5 px-4 text-xs font-medium text-slate-600">${item.voyage_no || '-'}</td>
+            <td class="py-3.5 px-4">
+              <span class="px-2.5 py-1 text-xs font-semibold rounded-md ${getStatusBadge(st)}">
+                ${item.status}
+              </span>
+            </td>
+            <td class="py-3.5 px-4 font-medium text-slate-800">${item.port_location}</td>
+            <td class="py-3.5 px-4">
+              <div class="font-medium text-slate-900">${item.cargo_info}</div>
+              <div class="text-xs text-amber-600 font-semibold mt-0.5">Còn: ${item.remaining_cargo} MT</div>
+            </td>
+            <td class="py-3.5 px-4 text-xs text-slate-700 font-medium">${item.eta_etd}</td>
+            <td class="py-3.5 px-4 text-xs text-slate-600">${item.discharging_port || '-'}</td>
+            <td class="py-3.5 px-4 text-xs text-slate-500 max-w-xs" title="${item.remarks}">
+              <div class="line-clamp-2">${item.remarks || '-'}</div>
+            </td>
+            <td class="py-3.5 px-4 text-center space-x-1.5 whitespace-nowrap">
+              <button onclick="viewDoc('${item.view_url}', '${item.vessel_name}')" class="px-2.5 py-1.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md border border-blue-200 transition">
+                <i class="fa-regular fa-eye"></i> Xem
+              </button>
+              <a href="${item.download_url}" target="_blank" class="px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-md border border-slate-300 transition">
+                <i class="fa-solid fa-download"></i> Tải
+              </a>
+            </td>
+          </tr>
+        `;
+        tbody.insertAdjacentHTML('beforeend', row);
+      });
+
+      document.getElementById('kpi-total').innerText = data.length;
+      document.getElementById('kpi-sea').innerText = sea;
+      document.getElementById('kpi-port').innerText = port;
+      document.getElementById('kpi-other').innerText = other;
+    }
+
+    function getStatusBadge(st) {
+      if (st.includes('SEA')) return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+      if (st.includes('LOAD') || st.includes('DISCH')) return 'bg-amber-50 text-amber-700 border border-amber-200';
+      return 'bg-slate-100 text-slate-700 border border-slate-200';
+    }
+
+    function viewDoc(viewUrl, vesselName) {
+      document.getElementById('modalTitle').innerText = 'Báo cáo ngày: Tàu ' + vesselName;
+      document.getElementById('fileViewerFrame').src = viewUrl;
+      document.getElementById('previewModal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('previewModal').classList.add('hidden');
+      document.getElementById('fileViewerFrame').src = '';
+    }
+
+    window.onload = loadData;
+  </script>
+</body>
+</html>
