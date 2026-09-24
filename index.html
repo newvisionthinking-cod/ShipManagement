@@ -5,10 +5,25 @@
   <title>Quản lý đội tàu Vinaship</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  
+  <!-- Thư viện Lịch Flatpickr -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="https://npmcdn.com/flatpickr/dist/themes/material_blue.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://npmcdn.com/flatpickr/dist/l10n/vn.js"></script>
+
   <style>
     .tab-active { border-bottom: 2px solid #2563eb; color: #1d4ed8; font-weight: 600; }
     .tab-inactive { border-bottom: 2px solid transparent; color: #64748b; }
     .tab-inactive:hover { color: #1e293b; border-color: #cbd5e1; }
+    
+    /* Đánh dấu ngày có báo cáo trên lịch tháng */
+    .has-report {
+      background-color: #dbeafe !important;
+      color: #1d4ed8 !important;
+      font-weight: 700 !important;
+      border-radius: 6px !important;
+    }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased min-h-screen">
@@ -29,7 +44,7 @@
         
         <div class="flex items-center gap-2">
           <button onclick="resetShipOrder()" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg border border-slate-700 transition" title="Đặt lại thứ tự tàu về mặc định">
-            <i class="fa-solid fa-arrow-rotate-left"></i> <span>Đặt lại thứ tự</span>
+            <i class="fa-solid fa-arrow-rotate-left"></i> <span class="hidden sm:inline">Đặt lại thứ tự</span>
           </button>
           <button onclick="loadData()" class="inline-flex items-center gap-2 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs md:text-sm font-medium rounded-lg shadow transition">
             <i class="fa-solid fa-rotate"></i> <span>Làm mới</span>
@@ -58,23 +73,35 @@
     <!-- MODULE 1: TÌNH HÌNH TÀU HÀNG NGÀY -->
     <div id="module-daily" class="space-y-6">
       
-      <!-- THANH CHỌN NGÀY & HƯỚNG DẪN SẮP XẾP -->
+      <!-- THANH CHỌN NGÀY (LỊCH THÁNG) & TÀI LIỆU GỐC TẬP TRUNG -->
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
+        
+        <!-- Cụm chọn ngày Lịch tháng -->
         <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-            <i class="fa-regular fa-calendar-check text-lg"></i>
+          <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-lg">
+            <i class="fa-regular fa-calendar-days"></i>
           </div>
           <div>
-            <label for="date-select" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Ngày báo cáo</label>
-            <select id="date-select" onchange="onDateChanged()" class="mt-0.5 bg-slate-50 border border-slate-300 text-slate-900 text-sm font-bold rounded-lg focus:ring-blue-500 focus:border-blue-500 block px-3 py-1.5 cursor-pointer">
-              <option value="">Đang tải các ngày...</option>
-            </select>
+            <label for="date-picker" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Ngày báo cáo</label>
+            <div class="relative mt-1">
+              <input type="text" id="date-picker" placeholder="Chọn ngày..." class="bg-slate-50 border border-slate-300 text-slate-900 text-sm font-bold rounded-lg focus:ring-blue-500 focus:border-blue-500 block pl-3 pr-8 py-1.5 cursor-pointer shadow-sm w-44" readonly>
+              <i class="fa-solid fa-chevron-down absolute right-3 top-3 text-xs text-slate-400 pointer-events-none"></i>
+            </div>
           </div>
         </div>
 
-        <div class="text-xs text-slate-500 flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200">
-          <i class="fa-solid fa-arrows-up-down text-blue-600"></i>
-          <span>Dùng nút <b>⬆ / ⬇</b> ở cột đầu tiên để đổi vị trí hiển thị tàu theo ý muốn. Thứ tự sẽ tự động được ghi nhớ.</span>
+        <!-- Cụm File báo cáo gốc của ngày đã chọn -->
+        <div id="doc-actions-container" class="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-xl border border-slate-200">
+          <span class="text-xs font-medium text-slate-600 mr-1 flex items-center gap-1.5">
+            <i class="fa-solid fa-file-word text-blue-600 text-sm"></i>
+            <span>Báo cáo gốc toàn đội:</span>
+          </span>
+          <button id="btn-view-doc" onclick="openCurrentDocModal()" class="px-3 py-1.5 text-xs font-semibold text-blue-700 bg-white hover:bg-blue-50 rounded-lg border border-blue-300 shadow-sm transition inline-flex items-center gap-1.5">
+            <i class="fa-regular fa-eye"></i> <span>Xem file</span>
+          </button>
+          <a id="btn-download-doc" href="#" target="_blank" class="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 rounded-lg border border-slate-300 shadow-sm transition inline-flex items-center gap-1.5">
+            <i class="fa-solid fa-download"></i> <span>Tải về</span>
+          </a>
         </div>
       </div>
 
@@ -113,7 +140,7 @@
         </div>
       </div>
 
-      <!-- Bảng tình hình các tàu -->
+      <!-- Bảng tình hình các tàu (Đã bỏ cột lặp lại, thêm chỗ thoáng đãng) -->
       <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
           <div class="flex items-center gap-2">
@@ -129,7 +156,7 @@
           <table class="w-full text-left border-collapse text-sm">
             <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 text-xs uppercase tracking-wider">
               <tr>
-                <th class="py-3.5 px-3 text-center w-16">Thứ tự</th>
+                <th class="py-3.5 px-3 text-center w-14">Thứ tự</th>
                 <th class="py-3.5 px-4">Tên Tàu</th>
                 <th class="py-3.5 px-4">Chuyến / HĐ</th>
                 <th class="py-3.5 px-4">Trạng thái</th>
@@ -138,12 +165,11 @@
                 <th class="py-3.5 px-4">Lịch trình (ETA/ETB/ETD)</th>
                 <th class="py-3.5 px-4">Cảng dỡ</th>
                 <th class="py-3.5 px-4">Diễn biến khai thác</th>
-                <th class="py-3.5 px-4 text-center">Tài liệu gốc</th>
               </tr>
             </thead>
             <tbody id="fleet-table-body" class="divide-y divide-slate-100 text-slate-700">
               <tr>
-                <td colspan="10" class="py-8 text-center text-slate-400">Đang nạp dữ liệu từ hệ thống...</td>
+                <td colspan="9" class="py-8 text-center text-slate-400">Đang nạp dữ liệu từ hệ thống...</td>
               </tr>
             </tbody>
           </table>
@@ -179,7 +205,7 @@
       <div class="flex items-center justify-between px-5 py-3.5 border-b bg-slate-50">
         <div class="flex items-center gap-2">
           <i class="fa-solid fa-file-word text-blue-600 text-lg"></i>
-          <h3 id="modalTitle" class="font-bold text-slate-800 text-sm md:text-base">Xem file báo cáo</h3>
+          <h3 id="modalTitle" class="font-bold text-slate-800 text-sm md:text-base">Xem file báo cáo ngày</h3>
         </div>
         <button onclick="closeModal()" class="text-slate-400 hover:text-slate-700 text-xl font-bold px-2 py-1 transition">&times;</button>
       </div>
@@ -195,7 +221,23 @@
 
     let allFleetData = [];
     let currentFilteredData = [];
+    let availableDates = []; // Danh sách YYYY-MM-DD
+    let fpInstance = null;
+    let currentSelectedDate = '';
+    let currentViewUrl = '';
+    let currentDownloadUrl = '';
+
     const STORAGE_KEY = 'vinaship_vessel_custom_order';
+
+    // Chuyển đổi định dạng ngày YYYY-MM-DD sang DD/MM/YYYY
+    function formatDateVN(dateStr) {
+      if (!dateStr || dateStr.length < 10) return dateStr;
+      const parts = dateStr.slice(0, 10).split('-');
+      if (parts.length === 3) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+      }
+      return dateStr;
+    }
 
     function switchModule(mod) {
       const dailyMod = document.getElementById('module-daily');
@@ -225,7 +267,7 @@
         })
         .then(data => onDataLoaded(data))
         .catch(err => {
-          alert('Không thể tải dữ liệu: ' + err.message + '\nKiểm tra lại quyền Anyone khi Deploy.');
+          alert('Không thể tải dữ liệu: ' + err.message + '\nVui lòng kiểm tra quyền Anyone khi Deploy.');
           document.getElementById('loading-badge').classList.add('hidden');
         });
     }
@@ -234,43 +276,87 @@
       document.getElementById('loading-badge').classList.add('hidden');
       allFleetData = data || [];
 
-      const dates = [...new Set(allFleetData.map(item => item.report_date).filter(Boolean))];
-      dates.sort((a, b) => b.localeCompare(a));
+      // Lấy danh sách các ngày có báo cáo (chuẩn YYYY-MM-DD)
+      availableDates = [...new Set(allFleetData.map(item => item.report_date).filter(Boolean))];
+      availableDates.sort((a, b) => b.localeCompare(a)); // Ngày mới nhất lên trước
 
-      const select = document.getElementById('date-select');
-      select.innerHTML = '';
-
-      if (dates.length === 0) {
-        select.innerHTML = '<option value="">Không có dữ liệu</option>';
+      if (availableDates.length === 0) {
         renderFilteredData([]);
         return;
       }
 
-      dates.forEach(d => {
-        const opt = document.createElement('option');
-        opt.value = d;
-        opt.textContent = 'Ngày ' + d;
-        select.appendChild(opt);
-      });
+      currentSelectedDate = availableDates[0];
 
-      select.value = dates[0];
-      onDateChanged();
+      // Khởi tạo Lịch Flatpickr
+      initDatePicker();
+
+      // Hiển thị dữ liệu ngày mới nhất
+      filterAndRender(currentSelectedDate);
     }
 
-    function onDateChanged() {
-      const selectedDate = document.getElementById('date-select').value;
-      document.getElementById('table-heading').innerText = 'Tình hình các tàu (' + selectedDate + ')';
+    function initDatePicker() {
+      if (fpInstance) {
+        fpInstance.destroy();
+      }
+
+      fpInstance = flatpickr("#date-picker", {
+        locale: "vn",
+        dateFormat: "d/m/Y",
+        defaultDate: formatDateVN(currentSelectedDate),
+        enable: availableDates.map(d => {
+          const p = d.split('-');
+          return new Date(p[0], p[1] - 1, p[2]);
+        }),
+        onDayCreate: function(dObj, dStr, fp, dayElem) {
+          // Tô màu các ngày có báo cáo
+          const y = dayElem.dateObj.getFullYear();
+          const m = String(dayElem.dateObj.getMonth() + 1).padStart(2, '0');
+          const d = String(dayElem.dateObj.getDate()).padStart(2, '0');
+          const iso = `${y}-${m}-${d}`;
+
+          if (availableDates.includes(iso)) {
+            dayElem.classList.add("has-report");
+            dayElem.title = "Có báo cáo";
+          }
+        },
+        onChange: function(selectedDates, dateStr, instance) {
+          if (selectedDates.length > 0) {
+            const selDate = selectedDates[0];
+            const y = selDate.getFullYear();
+            const m = String(selDate.getMonth() + 1).padStart(2, '0');
+            const d = String(selDate.getDate()).padStart(2, '0');
+            currentSelectedDate = `${y}-${m}-${d}`;
+            filterAndRender(currentSelectedDate);
+          }
+        }
+      });
+    }
+
+    function filterAndRender(selectedDate) {
+      const dateDisplay = formatDateVN(selectedDate);
+      document.getElementById('table-heading').innerText = `Tình hình các tàu (Ngày ${dateDisplay})`;
       
       let filtered = allFleetData.filter(item => item.report_date === selectedDate);
       
-      // Sắp xếp lại theo thứ tự người dùng đã lưu
+      // Cập nhật link xem và tải file gốc của ngày đó lên thanh công cụ
+      if (filtered.length > 0 && filtered[0].view_url) {
+        currentViewUrl = filtered[0].view_url;
+        currentDownloadUrl = filtered[0].download_url;
+        document.getElementById('doc-actions-container').classList.remove('opacity-40', 'pointer-events-none');
+        document.getElementById('btn-download-doc').href = currentDownloadUrl;
+      } else {
+        currentViewUrl = '';
+        currentDownloadUrl = '';
+        document.getElementById('doc-actions-container').classList.add('opacity-40', 'pointer-events-none');
+      }
+
+      // Sắp xếp theo thứ tự người dùng lưu
       filtered = applySavedOrder(filtered);
       currentFilteredData = filtered;
 
       renderFilteredData(currentFilteredData);
     }
 
-    // Lấy thứ tự đã lưu trong LocalStorage áp dụng vào danh sách
     function applySavedOrder(data) {
       const savedOrder = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
       if (!savedOrder || savedOrder.length === 0) return data;
@@ -289,29 +375,24 @@
       });
     }
 
-    // Đổi thứ tự một tàu (lên hoặc xuống)
     function moveShip(index, direction) {
       const newIndex = index + direction;
       if (newIndex < 0 || newIndex >= currentFilteredData.length) return;
 
-      // Hoán đổi vị trí trong mảng
       const temp = currentFilteredData[index];
       currentFilteredData[index] = currentFilteredData[newIndex];
       currentFilteredData[newIndex] = temp;
 
-      // Lưu lại thứ tự tên tàu vào LocalStorage
       const newOrderNames = currentFilteredData.map(item => (item.vessel_name || '').trim().toUpperCase());
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newOrderNames));
 
-      // Vẽ lại bảng
       renderFilteredData(currentFilteredData);
     }
 
-    // Đặt lại thứ tự gốc
     function resetShipOrder() {
       if (confirm("Bạn có muốn đặt lại thứ tự các tàu về mặc định không?")) {
         localStorage.removeItem(STORAGE_KEY);
-        onDateChanged();
+        filterAndRender(currentSelectedDate);
       }
     }
 
@@ -320,7 +401,7 @@
       tbody.innerHTML = '';
       
       if (!data || data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="10" class="py-8 text-center text-slate-400">Không có dữ liệu báo cáo cho ngày này.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="py-8 text-center text-slate-400">Không có dữ liệu báo cáo cho ngày này.</td></tr>';
         document.getElementById('kpi-total').innerText = 0;
         document.getElementById('kpi-sea').innerText = 0;
         document.getElementById('kpi-port').innerText = 0;
@@ -338,10 +419,11 @@
 
         const isFirst = index === 0;
         const isLast = index === data.length - 1;
+        const dateVN = formatDateVN(item.report_date);
 
         const row = `
           <tr class="hover:bg-slate-50/90 transition">
-            <!-- Cột nút chỉnh thứ tự -->
+            <!-- Nút chỉnh thứ tự -->
             <td class="py-3 px-2 text-center whitespace-nowrap">
               <div class="inline-flex flex-col gap-0.5">
                 <button onclick="moveShip(${index}, -1)" ${isFirst ? 'disabled class="text-slate-300 cursor-not-allowed"' : 'class="text-slate-600 hover:text-blue-600 hover:bg-slate-200 rounded p-0.5"'} title="Chuyển lên trên">
@@ -355,7 +437,7 @@
 
             <td class="py-3.5 px-4">
               <div class="font-bold text-slate-900">${item.vessel_name}</div>
-              <div class="text-xs text-slate-400 mt-0.5">${item.report_date}</div>
+              <div class="text-xs text-slate-400 mt-0.5">${dateVN}</div>
             </td>
             <td class="py-3.5 px-4 text-xs font-medium text-slate-600">${item.voyage_no || '-'}</td>
             <td class="py-3.5 px-4">
@@ -372,14 +454,6 @@
             <td class="py-3.5 px-4 text-xs text-slate-600">${item.discharging_port || '-'}</td>
             <td class="py-3.5 px-4 text-xs text-slate-500 max-w-xs" title="${item.remarks}">
               <div class="line-clamp-2">${item.remarks || '-'}</div>
-            </td>
-            <td class="py-3.5 px-4 text-center space-x-1.5 whitespace-nowrap">
-              <button onclick="viewDoc('${item.view_url}', '${item.vessel_name}')" class="px-2.5 py-1.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md border border-blue-200 transition">
-                <i class="fa-regular fa-eye"></i> Xem
-              </button>
-              <a href="${item.download_url}" target="_blank" class="px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-md border border-slate-300 transition">
-                <i class="fa-solid fa-download"></i> Tải
-              </a>
             </td>
           </tr>
         `;
@@ -398,9 +472,13 @@
       return 'bg-slate-100 text-slate-700 border border-slate-200';
     }
 
-    function viewDoc(viewUrl, vesselName) {
-      document.getElementById('modalTitle').innerText = 'Báo cáo ngày: Tàu ' + vesselName;
-      document.getElementById('fileViewerFrame').src = viewUrl;
+    function openCurrentDocModal() {
+      if (!currentViewUrl) {
+        alert("Chưa có link tài liệu gốc cho ngày này.");
+        return;
+      }
+      document.getElementById('modalTitle').innerText = 'Báo cáo ngày: ' + formatDateVN(currentSelectedDate);
+      document.getElementById('fileViewerFrame').src = currentViewUrl;
       document.getElementById('previewModal').classList.remove('hidden');
     }
 
