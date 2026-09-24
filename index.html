@@ -27,7 +27,10 @@
           </div>
         </div>
         
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2">
+          <button onclick="resetShipOrder()" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg border border-slate-700 transition" title="Đặt lại thứ tự tàu về mặc định">
+            <i class="fa-solid fa-arrow-rotate-left"></i> <span>Đặt lại thứ tự</span>
+          </button>
           <button onclick="loadData()" class="inline-flex items-center gap-2 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs md:text-sm font-medium rounded-lg shadow transition">
             <i class="fa-solid fa-rotate"></i> <span>Làm mới</span>
           </button>
@@ -55,7 +58,7 @@
     <!-- MODULE 1: TÌNH HÌNH TÀU HÀNG NGÀY -->
     <div id="module-daily" class="space-y-6">
       
-      <!-- THANH CHỌN NGÀY BÁO CÁO -->
+      <!-- THANH CHỌN NGÀY & HƯỚNG DẪN SẮP XẾP -->
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
         <div class="flex items-center gap-3">
           <div class="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
@@ -69,9 +72,9 @@
           </div>
         </div>
 
-        <div class="text-xs text-slate-500 flex items-center gap-1.5 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200">
-          <i class="fa-solid fa-circle-info text-blue-500"></i>
-          <span>Hiển thị theo báo cáo chốt trực ban ngày đã chọn.</span>
+        <div class="text-xs text-slate-500 flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200">
+          <i class="fa-solid fa-arrows-up-down text-blue-600"></i>
+          <span>Dùng nút <b>⬆ / ⬇</b> ở cột đầu tiên để đổi vị trí hiển thị tàu theo ý muốn. Thứ tự sẽ tự động được ghi nhớ.</span>
         </div>
       </div>
 
@@ -126,6 +129,7 @@
           <table class="w-full text-left border-collapse text-sm">
             <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 text-xs uppercase tracking-wider">
               <tr>
+                <th class="py-3.5 px-3 text-center w-16">Thứ tự</th>
                 <th class="py-3.5 px-4">Tên Tàu</th>
                 <th class="py-3.5 px-4">Chuyến / HĐ</th>
                 <th class="py-3.5 px-4">Trạng thái</th>
@@ -139,7 +143,7 @@
             </thead>
             <tbody id="fleet-table-body" class="divide-y divide-slate-100 text-slate-700">
               <tr>
-                <td colspan="9" class="py-8 text-center text-slate-400">Đang nạp dữ liệu từ hệ thống...</td>
+                <td colspan="10" class="py-8 text-center text-slate-400">Đang nạp dữ liệu từ hệ thống...</td>
               </tr>
             </tbody>
           </table>
@@ -190,6 +194,8 @@
     const API_URL = "https://script.google.com/macros/s/AKfycbx0y-5asV3mH0ZrfDfmme7gWkzjBHg8HJaP6_lrofsQ-gaHSS-32bvEZNq2q2_eCCWa/exec";
 
     let allFleetData = [];
+    let currentFilteredData = [];
+    const STORAGE_KEY = 'vinaship_vessel_custom_order';
 
     function switchModule(mod) {
       const dailyMod = document.getElementById('module-daily');
@@ -210,7 +216,6 @@
       }
     }
 
-    // Tải dữ liệu qua giao thức fetch trực tiếp từ Microsoft Edge
     function loadData() {
       document.getElementById('loading-badge').classList.remove('hidden');
       fetch(API_URL)
@@ -256,8 +261,58 @@
       const selectedDate = document.getElementById('date-select').value;
       document.getElementById('table-heading').innerText = 'Tình hình các tàu (' + selectedDate + ')';
       
-      const filtered = allFleetData.filter(item => item.report_date === selectedDate);
-      renderFilteredData(filtered);
+      let filtered = allFleetData.filter(item => item.report_date === selectedDate);
+      
+      // Sắp xếp lại theo thứ tự người dùng đã lưu
+      filtered = applySavedOrder(filtered);
+      currentFilteredData = filtered;
+
+      renderFilteredData(currentFilteredData);
+    }
+
+    // Lấy thứ tự đã lưu trong LocalStorage áp dụng vào danh sách
+    function applySavedOrder(data) {
+      const savedOrder = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+      if (!savedOrder || savedOrder.length === 0) return data;
+
+      return data.sort((a, b) => {
+        const nameA = (a.vessel_name || '').trim().toUpperCase();
+        const nameB = (b.vessel_name || '').trim().toUpperCase();
+        
+        let indexA = savedOrder.indexOf(nameA);
+        let indexB = savedOrder.indexOf(nameB);
+        
+        if (indexA === -1) indexA = 999;
+        if (indexB === -1) indexB = 999;
+
+        return indexA - indexB;
+      });
+    }
+
+    // Đổi thứ tự một tàu (lên hoặc xuống)
+    function moveShip(index, direction) {
+      const newIndex = index + direction;
+      if (newIndex < 0 || newIndex >= currentFilteredData.length) return;
+
+      // Hoán đổi vị trí trong mảng
+      const temp = currentFilteredData[index];
+      currentFilteredData[index] = currentFilteredData[newIndex];
+      currentFilteredData[newIndex] = temp;
+
+      // Lưu lại thứ tự tên tàu vào LocalStorage
+      const newOrderNames = currentFilteredData.map(item => (item.vessel_name || '').trim().toUpperCase());
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(newOrderNames));
+
+      // Vẽ lại bảng
+      renderFilteredData(currentFilteredData);
+    }
+
+    // Đặt lại thứ tự gốc
+    function resetShipOrder() {
+      if (confirm("Bạn có muốn đặt lại thứ tự các tàu về mặc định không?")) {
+        localStorage.removeItem(STORAGE_KEY);
+        onDateChanged();
+      }
     }
 
     function renderFilteredData(data) {
@@ -265,7 +320,7 @@
       tbody.innerHTML = '';
       
       if (!data || data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" class="py-8 text-center text-slate-400">Không có dữ liệu báo cáo cho ngày này.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="10" class="py-8 text-center text-slate-400">Không có dữ liệu báo cáo cho ngày này.</td></tr>';
         document.getElementById('kpi-total').innerText = 0;
         document.getElementById('kpi-sea').innerText = 0;
         document.getElementById('kpi-port').innerText = 0;
@@ -275,14 +330,29 @@
 
       let sea = 0, port = 0, other = 0;
 
-      data.forEach(item => {
+      data.forEach((item, index) => {
         const st = (item.status || '').toUpperCase();
         if (st.includes('SEA')) sea++;
         else if (st.includes('LOAD') || st.includes('DISCH')) port++;
         else other++;
 
+        const isFirst = index === 0;
+        const isLast = index === data.length - 1;
+
         const row = `
           <tr class="hover:bg-slate-50/90 transition">
+            <!-- Cột nút chỉnh thứ tự -->
+            <td class="py-3 px-2 text-center whitespace-nowrap">
+              <div class="inline-flex flex-col gap-0.5">
+                <button onclick="moveShip(${index}, -1)" ${isFirst ? 'disabled class="text-slate-300 cursor-not-allowed"' : 'class="text-slate-600 hover:text-blue-600 hover:bg-slate-200 rounded p-0.5"'} title="Chuyển lên trên">
+                  <i class="fa-solid fa-chevron-up text-xs"></i>
+                </button>
+                <button onclick="moveShip(${index}, 1)" ${isLast ? 'disabled class="text-slate-300 cursor-not-allowed"' : 'class="text-slate-600 hover:text-blue-600 hover:bg-slate-200 rounded p-0.5"'} title="Chuyển xuống dưới">
+                  <i class="fa-solid fa-chevron-down text-xs"></i>
+                </button>
+              </div>
+            </td>
+
             <td class="py-3.5 px-4">
               <div class="font-bold text-slate-900">${item.vessel_name}</div>
               <div class="text-xs text-slate-400 mt-0.5">${item.report_date}</div>
