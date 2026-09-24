@@ -24,7 +24,7 @@
       border: 1px solid #93c5fd !important;
     }
 
-    /* THANH CUỘN NGANG HIỆN ĐẠI, DỄ DÀNG KÉO RÊ TRÊN EDGE / CHROME */
+    /* THANH CUỘN NGANG DỄ KÉO TRÊN EDGE / CHROME */
     .table-scrollbar-container::-webkit-scrollbar {
       height: 12px;
     }
@@ -161,7 +161,7 @@
         </div>
       </div>
 
-      <!-- Bảng tình hình các tàu (KÈM THANH CUỘN NGANG DỄ KÉO) -->
+      <!-- Bảng tình hình các tàu (ĐÃ BỎ CỘT Ý KIẾN CHỈ ĐẠO) -->
       <div class="bg-white rounded-xl border-2 border-slate-300 shadow-md overflow-hidden">
         <div class="px-5 py-4 border-b-2 border-slate-200 flex items-center justify-between bg-slate-50">
           <div class="flex items-center gap-2">
@@ -169,29 +169,28 @@
             <h2 id="table-heading" class="text-base font-bold text-slate-800">Tình hình các tàu</h2>
           </div>
           <span class="text-xs text-slate-500 flex items-center gap-1">
-            <i class="fa-solid fa-arrows-left-right text-slate-400"></i> Kéo thanh trượt bên dưới để xem thêm cột
+            <i class="fa-solid fa-arrows-left-right text-slate-400"></i> Kéo thanh trượt bên dưới nếu màn hình hẹp
           </span>
         </div>
 
-        <!-- Vùng cuộn ngang với Scrollbar đậm, rõ nét -->
+        <!-- Vùng cuộn ngang với Scrollbar xám đậm -->
         <div class="overflow-x-auto table-scrollbar-container pb-2">
-          <table class="w-full text-left border-collapse text-sm min-w-[1250px]">
+          <table class="w-full text-left border-collapse text-sm min-w-[1050px]">
             <thead class="bg-slate-200 text-slate-800 font-bold border-b-2 border-slate-400 text-xs uppercase tracking-wider">
               <tr>
                 <th class="py-4 px-2 text-center w-12 border-r border-slate-300">TT</th>
-                <th class="py-4 px-4 min-w-[170px] text-center border-r border-slate-300">Tên Tàu</th>
+                <th class="py-4 px-4 min-w-[160px] text-center border-r border-slate-300">Tên Tàu</th>
                 <th class="py-4 px-3 min-w-[110px] text-center border-r border-slate-300">Chuyến / HĐ</th>
                 <th class="py-4 px-3 min-w-[130px] text-center border-r border-slate-300">Trạng thái</th>
                 <th class="py-4 px-3 min-w-[140px] border-r border-slate-300">Vị trí / Cảng</th>
                 <th class="py-4 px-4 min-w-[160px] border-r border-slate-300">Hàng hóa & Còn lại</th>
                 <th class="py-4 px-4 min-w-[160px] border-r border-slate-300">Lịch trình (ETA/ETD)</th>
-                <th class="py-4 px-4 min-w-[320px] border-r border-slate-300">Diễn biến khai thác & Đề xuất</th>
-                <th class="py-4 px-4 min-w-[220px]">Ý kiến chỉ đạo / Ghi chú</th>
+                <th class="py-4 px-4 min-w-[340px]">Diễn biến khai thác & Đề xuất</th>
               </tr>
             </thead>
             <tbody id="fleet-table-body" class="text-slate-800">
               <tr>
-                <td colspan="9" class="py-12 text-center text-slate-400">Đang nạp dữ liệu từ hệ thống...</td>
+                <td colspan="8" class="py-12 text-center text-slate-400">Đang nạp dữ liệu từ hệ thống...</td>
               </tr>
             </tbody>
           </table>
@@ -244,7 +243,6 @@
     let currentDownloadUrl = '';
 
     const STORAGE_KEY_ORDER = 'vinaship_vessel_custom_order';
-    const STORAGE_KEY_NOTES = 'vinaship_vessel_custom_notes';
     const STORAGE_KEY_REMARKS = 'vinaship_vessel_edited_remarks';
     const STORAGE_KEY_PROPOSALS = 'vinaship_vessel_edited_proposals';
 
@@ -398,18 +396,19 @@
       }
     }
 
-    // Chắt lọc Diễn biến: Bỏ ngày bàn giao cũ, bỏ lặp ETB, bỏ lặp số lượng hàng còn lại
+    // Làm sạch diễn biến: Bỏ bàn giao, nhận tàu, ngày tháng cũ 28/3, bỏ ghi chú thừa
     function cleanConciseRemarks(rawRemarks) {
       if (!rawRemarks) return 'Bình thường, không có diễn biến đặc biệt.';
       
       let text = rawRemarks;
-      // Bỏ ngày bàn giao
-      text = text.replace(/bàn giao.*?\d{1,2}[\/\-]\d{1,2}[\/\-]?\d{0,4}/gi, '');
-      text = text.replace(/nhận tàu.*?\d{1,2}[\/\-]\d{1,2}[\/\-]?\d{0,4}/gi, '');
-      
-      // Cắt bỏ phần ghi chú in nghiêng dưới
+      text = text.replace(/(tàu\s+)?(nhận\s+)?bàn\s+giao.*?(\d{1,2}[\/\-]\d{1,2}([\/\-]\d{2,4})?|[A-Za-z]+)?/gi, '');
+      text = text.replace(/nhận\s+tàu.*?(\d{1,2}[\/\-]\d{1,2}([\/\-]\d{2,4})?|[A-Za-z]+)?/gi, '');
+      text = text.replace(/từ\s+ngày\s+\d{1,2}[\/\-]\d{1,2}([\/\-]\d{2,4})?/gi, '');
+      text = text.replace(/et[b|d|a|c]\s*:?[^\.,;]+/gi, '');
+      text = text.replace(/còn\s+(lại\s+)?(phải\s+)?(xếp|dỡ)\s*:?[^\.,;]+/gi, '');
+
       const lines = text.split(/\r?\n/);
-      const cleanLines = [];
+      let cleanLines = [];
       for (let line of lines) {
         const t = line.trim().toLowerCase();
         if (t.startsWith('ghi chú:') || t.startsWith('lưu ý:') || t.startsWith('*') || t.startsWith('note:') || t.startsWith('dự kiến dỡ')) {
@@ -417,7 +416,11 @@
         }
         cleanLines.push(line);
       }
-      return cleanLines.join(' ').replace(/\s+/g, ' ').trim();
+      text = cleanLines.join(' ');
+      text = text.replace(/^[,\.\-\:\s]+/, '').replace(/[,\s]+$/, '').replace(/\s+/g, ' ').trim();
+
+      if (!text || text.length < 5) return 'Đang làm hàng / hành trình theo kế hoạch.';
+      return text;
     }
 
     function getDefaultProposal(item) {
@@ -439,7 +442,12 @@
     function getStoredData(storageKey, vesselName, reportDate, defaultVal) {
       const store = JSON.parse(localStorage.getItem(storageKey) || "{}");
       const key = `${vesselName}_${reportDate}`;
-      return store[key] !== undefined ? store[key] : defaultVal;
+      const saved = store[key];
+      // Nếu dữ liệu lưu cũ dính chữ bàn giao, tự động thay bằng defaultVal đã làm sạch
+      if (storageKey === STORAGE_KEY_REMARKS && saved && /bàn\s+giao|nhận\s+tàu|28\/3/i.test(saved)) {
+        return defaultVal;
+      }
+      return saved !== undefined ? saved : defaultVal;
     }
 
     function saveStoredData(storageKey, vesselName, reportDate, val) {
@@ -458,7 +466,7 @@
       if (!data || data.length === 0) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="9" class="py-12 text-center bg-white">
+            <td colspan="8" class="py-12 text-center bg-white">
               <div class="inline-flex flex-col items-center">
                 <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center text-xl mb-2">
                   <i class="fa-regular fa-folder-open"></i>
@@ -491,9 +499,7 @@
 
         const defaultProposal = getDefaultProposal(item);
         const currentProposal = getStoredData(STORAGE_KEY_PROPOSALS, item.vessel_name, item.report_date, defaultProposal);
-        const userNote = getStoredData(STORAGE_KEY_NOTES, item.vessel_name, item.report_date, '');
 
-        // VIỀN PHÂN CÁCH GIỮA CÁC TÀU RÕ NÉT (border-b-4)
         const rowBg = index % 2 === 0 ? 'bg-white' : 'bg-slate-50/80';
 
         const row = `
@@ -540,8 +546,8 @@
             <!-- Lịch trình (ETA/ETD) -->
             <td class="py-4 px-4 text-xs text-slate-700 font-medium whitespace-pre-line leading-relaxed border-r border-slate-300">${item.eta_etd}</td>
 
-            <!-- Diễn biến khai thác (Súc tích, có thể sửa) & Đề xuất (Có thể sửa) -->
-            <td class="py-4 px-4 text-xs space-y-2.5 border-r border-slate-300">
+            <!-- Diễn biến khai thác & Đề xuất (Rộng rãi, dễ đọc, cho phép sửa trực tiếp) -->
+            <td class="py-4 px-4 text-xs space-y-2.5">
               <div>
                 <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
                   <i class="fa-solid fa-pen text-slate-400"></i> Diễn biến khai thác:
@@ -563,20 +569,6 @@
                   class="w-full text-xs p-2 rounded-lg border border-blue-200 bg-blue-50/60 hover:bg-blue-50 focus:bg-white focus:ring-blue-500 focus:border-blue-500 text-slate-800 leading-relaxed shadow-sm resize-y"
                 >${currentProposal}</textarea>
               </div>
-            </td>
-
-            <!-- Ô Ý kiến chỉ đạo của User -->
-            <td class="py-4 px-4 text-xs">
-              <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
-                <i class="fa-solid fa-comment-dots text-slate-400"></i> Ý kiến chỉ đạo:
-              </label>
-              <textarea 
-                oninput="saveStoredData('${STORAGE_KEY_NOTES}', '${item.vessel_name}', '${item.report_date}', this.value)"
-                placeholder="Nhập ý kiến chỉ đạo, lưu ý..." 
-                rows="5" 
-                class="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm leading-relaxed text-slate-800"
-              >${userNote}</textarea>
-              <span class="text-[10px] text-slate-400 block mt-1 italic">Tự động lưu khi gõ</span>
             </td>
           </tr>
         `;
