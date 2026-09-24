@@ -273,15 +273,35 @@
       }
     }
 
+   const STORAGE_KEY_FLEET_CACHE = 'vinaship_fleet_data_offline_cache';
+
     function loadData() {
+      // 1. LẤY DỮ LIỆU TỪ BỘ NHỚ MÁY RA HIỂN THỊ NGAY LẬP TỨC (0.1 giây)
+      const cached = localStorage.getItem(STORAGE_KEY_FLEET_CACHE);
+      if (cached) {
+        try {
+          const localData = JSON.parse(cached);
+          if (localData && localData.length > 0) {
+            onDataLoaded(localData);
+          }
+        } catch (e) {
+          console.warn("Lỗi đọc cache local:", e);
+        }
+      }
+
+      // 2. CHẠY NGẦM GỌI API MÁY CHỦ ĐỂ CẬP NHẬT DỮ LIỆU MỚI NHẤT
       fetch(API_URL)
         .then(response => {
           if (!response.ok) throw new Error("HTTP error " + response.status);
           return response.json();
         })
-        .then(data => onDataLoaded(data))
+        .then(data => {
+          // Lưu dữ liệu mới vào máy cho lần sau mở
+          localStorage.setItem(STORAGE_KEY_FLEET_CACHE, JSON.stringify(data));
+          onDataLoaded(data);
+        })
         .catch(err => {
-          alert('Không thể tải dữ liệu: ' + err.message);
+          console.error('Không thể đồng bộ mới:', err);
         });
     }
 
